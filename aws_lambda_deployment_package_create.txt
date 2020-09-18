@@ -1,0 +1,61 @@
+- Create Virtual Environment
+virtualenv -p python3 lambdadev
+
+- Activate Virtual Environment
+source lambdadev/bin/activate
+
+- Install external python libraries via pip3
+pip3 install -r requirements.txt
+
+- Copy lambda_function.py to lambdadev/lib/python3.6/site-packages
+cp lambda_function.py lambdadev/lib/python3.6/site-packages
+
+- Zip entire lambdadev/lib/python3.6/site-packages folder
+cd lambdadev/lib/python3.6/site-packages
+zip -r9 lambda_function.zip *
+
+zip -r9 accounts_lambda_function.zip *
+
+- Move lambda_function.zip back to the root project folder
+mv lambda_function.zip ../../../../
+cd ../../../../
+
+- Upload lambda_function.zip to s3 bucket
+aws s3 cp $PWD/lambda_function.zip s3://devopsify/functions/apigateway/lambda_function.zip
+
+aws s3 cp $PWD/accounts_lambda_function.zip s3://devopsify/functions/apigateway/accounts_lambda_function.zip
+
+- Verify upload
+aws s3 ls devopsify --recursive
+
+- Copy Latest VersionID And Place In CloudFormation Template
+aws s3api list-object-versions --bucket devopsify
+
+- [If New] Create Stack
+aws cloudformation --region us-east-1 create-stack --stack-name devopsifyapigateway --template-body file:///${PWD}/devopsify_aws_api.yaml
+
+- [Else] Update Stack
+aws cloudformation --region us-east-1 update-stack --stack-name devopsifyapigateway --template-body file:///${PWD}/devopsify_aws_api.yaml --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation --region us-east-1 update-stack --stack-name devopsifyapigateway --template-body file:///${PWD}/devopsify_aws_api.yaml --capabilities CAPABILITY_NAMED_IAM
+
+- Deactivate Virtual Environment
+deactivate
+
+- Delete Stack
+aws cloudformation --region us-east-1 delete-stack --stack-name devopsifyapigateway
+
+- Test Lambda Function via API Gateway
+
+curl -X POST -H "Content-Type: application/json" --data '{"provider":"aws","user_name":"thevictorgreen@gmail.com"}' https://50t6v97vnk.execute-api.us-east-1.amazonaws.com/alpha1/register
+
+curl -X POST -H "Content-Type: application/json" --data '{"provider":"aws","region":"us-east-1","environment":"development","user_name":"thevictorgreen@gmail.com","user_id":"IN2I73N95D","user_bucket":"onecloud-IN2I73N95D"}' https://50t6v97vnk.execute-api.us-east-1.amazonaws.com/alpha1/deploy
+curl -X POST -H "Content-Type: application/json" --data '{"provider":"aws","region":"us-east-1","environment":"staging","user_name":"thevictorgreen@gmail.com","user_id":"IN2I73N95D","user_bucket":"onecloud-IN2I73N95D"}' https://50t6v97vnk.execute-api.us-east-1.amazonaws.com/alpha1/deploy
+curl -X POST -H "Content-Type: application/json" --data '{"provider":"aws","region":"us-east-1","environment":"production","user_name":"thevictorgreen@gmail.com","user_id":"IN2I73N95D","user_bucket":"onecloud-IN2I73N95D"}' https://50t6v97vnk.execute-api.us-east-1.amazonaws.com/alpha1/deploy
+
+curl -X POST -H "Content-Type: application/json" --data '{"provider":"aws","task_node":"sample000.management.skyfall.io"}' https://50t6v97vnk.execute-api.us-east-1.amazonaws.com/alpha1/consumetask
+
+curl -X POST -H "Content-Type: application/json" --data '{"user_id":"IN2I73N95D","user_name":"thevictorgreen@gmail.com","cloud_architecture_id":"YHKIQGB2W4","task_id":"3QE0EQS4PM","task_status":"completed"}' https://50t6v97vnk.execute-api.us-east-1.amazonaws.com/alpha1/marktaskcomplete
+curl -X POST -H "Content-Type: application/json" --data '{"user_id":"IN2I73N95D","user_name":"thevictorgreen@gmail.com","cloud_architecture_id":"8P2A1H33JR","task_id":"678XO40AW4","task_status":"completed"}' https://50t6v97vnk.execute-api.us-east-1.amazonaws.com/alpha1/marktaskcomplete
+curl -X POST -H "Content-Type: application/json" --data '{"user_id":"IN2I73N95D","user_name":"thevictorgreen@gmail.com","cloud_architecture_id":"QZVAMJAJTV","task_id":"8MJSS3I578","task_status":"completed"}' https://50t6v97vnk.execute-api.us-east-1.amazonaws.com/alpha1/marktaskcomplete
+
+curl -X POST -H "Content-Type: application/json" --data '{"provider":"aws"}' https://50t6v97vnk.execute-api.us-east-1.amazonaws.com/alpha1/inventory
