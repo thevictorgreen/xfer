@@ -1,0 +1,236 @@
+openapi: "3.0.2"
+info:
+  title: Devopsify
+  description: "Design new or implement existing Cloud Infrastructures as code"
+  termsOfService: "https://devopsify.net/terms"
+  version: '1.0'
+  contact:
+    name: "Devopsify API"
+    url: "https://devopsify.net/api/v1"
+    email: "admin@devopsify.net"
+  license:
+    name: "CC Attribution-ShareAlike 4.0 (CC BY-SA 4.0)"
+    url: "https://devopsify.net/price"
+externalDocs:
+  description: API Documentation
+  url: https://devopsify.net/docs
+servers:
+- url: https://devopsify.net/api/v1
+  description: Production Server
+tags:
+  - name: register
+    description: "Register User Account"
+  - name: deploy
+    description: "Deploy Cloud Architecture"
+  - name: inventory
+    description: "Get Status Of Cloud Deployments"
+  - name: consumetask
+    description: "Deploy Cloud Configuration To Cloud Provider"
+  - name: marktaskcomplete
+    description: "Update Cloud Infrastructure From Updated Configuration"
+paths:
+  /register:
+    post:
+      tags:
+        - register
+      summary: Creates A User Account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider:
+                  type: string
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Initialized Cloud Provider
+        '404':
+          description: UnSuccessful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failure
+                  message:
+                    type: string
+                    example: Could not Initialie Cloud Provider
+  /deploy:
+    post:
+      tags:
+        - deploy
+      summary: Deploy Cloud Configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider:
+                  type: string
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Initialized Cloud Provider
+        '404':
+          description: UnSuccessful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failure
+                  message:
+                    type: string
+                    example: Could not Initialie Cloud Provider
+  /inventory:
+    post:
+      tags:
+        - inventory
+      summary: Get Status Of Cloud Deployments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider:
+                  type: string
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Initialized Cloud Provider
+        '404':
+          description: UnSuccessful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failure
+                  message:
+                    type: string
+                    example: Could not Initialie Cloud Provider
+  /consumetask:
+    post:
+      tags:
+        - consumetask
+      summary: Deploy Cloud Configuration To Cloud Provider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider:
+                  type: string
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Initialized Cloud Provider
+        '404':
+          description: UnSuccessful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failure
+                  message:
+                    type: string
+                    example: Could not Initialie Cloud Provider
+  /marktaskcomplete:
+    post:
+      tags:
+        - marktaskcomplete
+      summary: Update Cloud Infrastructure From Updated Configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                provider:
+                  type: string
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Initialized Cloud Provider
+        '404':
+          description: UnSuccessful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: failure
+                  message:
+                    type: string
+                    example: Could not Initialie Cloud Provider

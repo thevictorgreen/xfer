@@ -1,0 +1,164 @@
+Metadata:
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/metadata-section-structure.html
+# You can use the optional Metadata section to include arbitrary
+# JSON or YAML objects that provide details about the template.
+# For example, you can include template implementation details
+# about specific resources, as shown in the following snippet:
+# During a stack update, you cannot update the Metadata section by itself.
+# You can update it only when you include changes that add, modify, or delete resources.
+  License: Apache-2.0
+
+
+# Included for backward compatability
+AWSTemplateFormatVersion: '2010-09-09'
+
+
+# Template Description
+Description: 'Devopsify AWS API'
+
+
+#Parameters:
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html
+# Use the optional Parameters section to customize your templates.
+# Parameters enable you to input custom values to your template
+# each time you create or update a stack. Dynamic input for your templates
+
+
+#Mappings:
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/mappings-section-structure.html
+# The optional Mappings section matches a key to a corresponding
+# set of named values. For example, if you want to set values based
+# on a region, you can create a mapping that uses the region name as a
+# key and contains the values you want to specify for each specific
+# region. You use the Fn::FindInMap intrinsic function to retrieve values in a map.
+# You cannot include parameters, pseudo parameters, or intrinsic
+# functions in the Mappings section. Static variables for your template
+
+
+Resources:
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html
+# The required Resources section declares the AWS resources that
+# you want to include in the stack, such as an Amazon EC2 instance
+# or an Amazon S3 bucket.
+
+  # Create Lambda Function
+  DevopsifyAPIGateway001useast1Function:
+    Type: AWS::Lambda::Function
+    Description: Provides API entry point into devopsify
+    Properties:
+      FunctionName: APIGateway
+      Runtime: python3.6
+      Role: arn:aws:iam::004121356543:role/lambda-kinesis-to-dynamodb-role
+      Handler: lambda_function.lambda_handler
+      Code:
+        S3Bucket: devopsify
+        S3Key: functions/apigateway/lambda_function.zip
+        S3ObjectVersion: MnCSkOLaM1D4ApuimrlWX1QRopwDd8MU
+
+  # Create API Gateway REST API
+  DevopsifyAPIGateway001RESTAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: DevopsifyApi
+      Description: The Devopsify API Gateway
+      BodyS3Location:
+        Bucket: devopsify
+        Key: apispec/devopsify_aws_api_spec.yaml
+        Version: QcalR.xWyqCpxkYFd5SKRHzizAEB3AoG
+
+  # Create API Gateway REST API Deployment
+  DevopsifyAPIGateway001Deployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: DevopsifyAPIGateway001RESTAPI
+    Properties:
+      RestApiId: !Ref DevopsifyAPIGateway001RESTAPI
+      Description: 'Deployment Object For The Devopsify APIGateway'
+
+  # Creat API Gateway REST API Stage
+  DevopsifyAPIGateway001StageAlpha1:
+    Type: AWS::ApiGateway::Stage
+    DependsOn:
+      - DevopsifyAPIGateway001RESTAPI
+      - DevopsifyAPIGateway001Deployment
+    Properties:
+      StageName: 'alpha1'
+      RestApiId: !Ref DevopsifyAPIGateway001RESTAPI
+      DeploymentId: !Ref DevopsifyAPIGateway001Deployment
+
+  # Create DynamoDB Table
+  DevopsifyAPIGatewayUsers001useast1DynDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: APIGatewayUsersTable
+      AttributeDefinitions:
+        - AttributeName: "UserName"
+          AttributeType: "S"
+        - AttributeName: "UserID"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "UserName"
+          KeyType: "HASH"
+        - AttributeName: "UserID"
+          KeyType: "RANGE"
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  # Create DynamoDB Table
+  DevopsifyAPIGatewayTasks001useast1DynDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: APIGatewayTasksTable
+      AttributeDefinitions:
+        - AttributeName: "TaskID"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "TaskID"
+          KeyType: "HASH"
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  # Create Lambda Function
+  #DevopsifyAPIGateway001useast12Function:
+  #  Type: AWS::Lambda::Function
+  #  Description: Provides API entry point into devopsify accountss
+  #  Properties:
+  #    FunctionName: APIGatewayAccounts
+  #    Runtime: nodejs12.x
+  #    Role: arn:aws:iam::004121356543:role/lambda-kinesis-to-dynamodb-role
+  #    Handler: index.handler
+  #    Code:
+  #      S3Bucket: devopsify
+  #      S3Key: functions/apigateway/accounts_lambda_function.zip
+  #      S3ObjectVersion: "RbHBLjjTXwy20PXTBTom2gHRCDXp229W"
+
+  # Create API Gateway REST API
+  #DevopsifyAPIGatewayAccounts001RESTAPI:
+  #  Type: AWS::ApiGateway::RestApi
+  #  Properties:
+  #    Name: DevopsifyAccountsApi
+  #    Description: The Devopsify Accounts API Gateway
+  #    BodyS3Location:
+  #      Bucket: devopsify
+  #      Key: apispec/devopsify_aws_api_accounts_spec.yaml
+  #      Version: 7ScdlgbHZYalxG5tJMpNpPDUUI3gG8c1
+
+  # Create API Gateway REST API Deployment
+  #DevopsifyAPIGateway002Deployment:
+  #  Type: AWS::ApiGateway::Deployment
+  #  DependsOn: DevopsifyAPIGatewayAccounts001RESTAPI
+  #  Properties:
+  #    RestApiId: !Ref DevopsifyAPIGateway001RESTAPI
+  #    Description: 'Deployment Object For The Devopsify APIGateway'
+
+  # Creat API Gateway REST API Stage
+  #DevopsifyAPIGateway002StageAlpha1:
+  #  Type: AWS::ApiGateway::Stage
+  #  DependsOn:
+  #    - DevopsifyAPIGatewayAccounts001RESTAPI
+  #    - DevopsifyAPIGateway002Deployment
+  #  Properties:
+  #    StageName: 'alpha1'
+  #    RestApiId: !Ref DevopsifyAPIGatewayAccounts001RESTAPI
+  #    DeploymentId: !Ref DevopsifyAPIGateway002Deployment
