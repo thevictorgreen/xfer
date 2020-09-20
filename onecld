@@ -1,0 +1,85 @@
+#!/bin/env bash
+while :
+do
+  # Check Task Queue For "unassigned" Tasks
+  task_node=$(hostname)
+  curl -X POST -H "Content-Type: application/json" --data '{"task_node":"'${task_node}'"}' https://50t6v97vnk.execute-api.us-east-1.amazonaws.com/alpha1/consumetask > check.json
+  status=$(cat check.json |jq -r .task.status)
+
+  if [[ "$status" == "present" ]]
+  then
+     # Get Parameters
+     user_id=$(cat check.json |jq -r .task.object.User.user_id)
+     user_bucket=$(cat check.json |jq -r .task.object.User.user_bucket)
+     user_name=$(cat check.json |jq -r .task.object.User.user_name)
+     cloud_architecture_id=$(cat check.json |jq -r .task.object.Architecture.cloud_architecture_id)
+     environment=$(cat check.json |jq -r .task.object.Architecture.environment)
+     region=$(cat check.json |jq -r .task.object.Architecture.region)
+     provider=$(cat check.json |jq -r .task.object.Architecture.provider)
+     task_id=$(cat check.json |jq -r .task.object.TaskID)
+     task_status="completed"
+
+     echo "[BEGIN] $(date)"
+     echo "Processing Task - [task_id ${task_id}] [cloud_architecture_id ${cloud_architecture_id}] [provider ${provider}] [environment ${environment}] [region ${region}] [user_id ${user_id}] [user_name ${user_name}] [user_bucket ${user_bucket}]"
+
+     # Prepare Platform
+     echo "Preparing Environment...."
+     sleep 30
+     onecloud build --provider ${provider} --item cloud --action remove
+
+     # Initialize Cloud
+     echo "Initializing Cloud Provider ${provider}"
+     sleep 30
+     onecloud build --provider ${provider} --item cloud --action initialize
+     ### Check if user_bucket exist. If not create it.
+     bucket_result=$(aws s3api list-buckets --query "Buckets[].Name"|grep ${user_bucket})
+     if [[ -z "$bucket_result" ]]
+     then
+       echo "${user_bucket} does not exist"
+       echo "creating bucket ${user_bucket}"
+       aws s3api create-bucket --bucket ${user_bucket} --region ${region}
+       echo "bucket ${user_bucket} created"
+     else
+       echo "found bucket ${user_bucket}"
+     fi
+
+     # Create Environment
+     echo "Creating Environment ${environment} in region ${region}"
+     sleep 30
+     onecloud build --provider ${provider} --item vpc --region ${region} --environment ${environment} --action create
+
+     # Export Environment
+     echo "Exporting Environment ${environment} in region ${region}"
+     sleep 30
+     onecloud build --provider ${provider} --item vpc --region ${region} --environment ${environment} --action export
+
+     # Deploy Environment
+     echo "Deploying Environment ${environment} in region ${region}"
+     sleep 30
+     #onecloud build --provider ${provider} --item vpc --region ${region} --environment ${environment} --action deploy
+
+     # Upload Artifacts To User S3 Bucket
+     echo "Uploading Artifacts...."
+     sleep 30
+     tar -cvf ${provider}-${region}-${environment}.tar AWS/
+     aws s3 cp $PWD/${provider}-${region}-${environment}.tar s3://${user_bucket}/${provider}-${region}-${environment}.tar
+
+     # Cleanup
+     echo "Cleaning Up...."
+     sleep 30
+     onecloud build --provider ${provider} --item cloud --action remove
+     rm -rf ${provider}-${region}-${environment}.tar
+
+     # Mark Task Complete
+     echo "Marking Task Complete...."
+     sleep 30
+     curl -X POST -H "Content-Type: application/json" --data '{"user_id":"'${user_id}'","user_name":"'${user_name}'","cloud_architecture_id":"'${cloud_architecture_id}'","task_id":"'${task_id}'","task_status":"'${task_status}'"}' https://50t6v97vnk.execute-api.us-east-1.amazonaws.com/alpha1/marktaskcomplete
+
+     echo "Task Complete - [task_id ${task_id}] [cloud_architecture_id ${cloud_architecture_id}] [provider ${provider}] [environment ${environment}] [region ${region}] [user_id ${user_id}] [user_name ${user_name}] [user_bucket ${user_bucket}]"
+     echo "[END] $(date)"
+
+  else
+     echo "$(date) :No New Tasks. Sleeping..."
+     sleep 30
+  fi
+done

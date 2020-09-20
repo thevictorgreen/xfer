@@ -1,0 +1,15 @@
+[Unit]
+Description=OneCloud Service
+After=network.target
+
+[Service]
+Type=simple
+User=onecloud
+Group=onecloud
+WorkingDirectory=/home/onecloud
+ExecStart=/usr/local/bin/onecld
+Restart=on-failure
+# Other restart options: always, on-abort, etc
+
+[Install]
+WantedBy=multi-user.target
